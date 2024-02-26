@@ -1,0 +1,28 @@
+1. Revisar configurações do sistema operacional
+	1. Local do PageFile
+	2. Power Options
+2. Revisar configurações do SQL Server 
+	1. Auto create statistics
+	2. Auto update statistics
+	3. Resource Gorvenour
+3. Analisar Error Log
+4. Analisar VLF ( Boas práticas < 300 )
+5. Verificar latência de discos
+6. Possibilidade compressão
+7. Missing Indexes
+8. Revisar autogrowth
+
+
+Trace Flags:
+    TF8780 - Desabilita o compilation TimeOut
+
+
+
+Dúvidas:
+
+    Como ver se o SQL Server está paginando?
+    XE de page splits para ajuste de fill factor (quem faz page split do mal)?
+
+--
+
+    sys.dm_exec_query_profiles para verificar quantos % para criação de um indice

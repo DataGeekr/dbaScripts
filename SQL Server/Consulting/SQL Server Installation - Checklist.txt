@@ -1,0 +1,85 @@
+Windows OS Installation
+-             All drives partition aligned.
+-             Hyper threading enabled in the Bios.
+-             OS and installed applications drive use RAID 1 and use NTFS with default Allocation Unit Size.
+-             OS installed to C Drive.
+-             Domain Administrators group added to the Local Administrators group.
+-             Account Policies enforced by GPO or set explicitly.
+	-             Password Policy
+	              Enforce password history = Last 10            Maximum password age = 90 days            Minimum password age = 7 days            Minimum password length = 8            Password must meet complexity requirements = Enabled
+	-             Account Lockout Policy
+	              Account lockout threshold = 5 invalid login attempts
+-             Local Policies enforced by GPO or set explicitly.
+	-             Audit Policy set to audit Success and Failure of
+	              Audit account logon events            Audit account management            Audit logon events            Audit policy change            Audit system events
+	-             Security Options
+	              Interactive logon: Do not display last user name – Enabled            Interactive logon: Message text for users attempting to log on – Set to Legal Disclaimer for access to production servers            Interactive logon: Message title for users attempting to log on – Set to Legal Message Titled for access to production servers.
+-             Everyone User removed from non-C drives.
+-             All applications installed to D Drive and not C Drive.
+-             Windows Updates configured to download but not install.
+-             NIC’s configured as teamed (if appropriate), set to Full Duplex and maximum network speed (usually 1GB).
+-             Validate IO Subsystem configuration is optimal using SQLIO and test alternate configurations to determine optimum configuration for SQL.
+-             If using SAN Storage test HBA Queue Depth settings at 64 and 128 in conjunction with SAN admin to determine the optimal setting for the server based on IO demands and impact to other systems using the SAN, ensure that MPIO is configured properly.  (Going to high on the SQL Server can allow it to dominate the SAN, reducing performance of other systems using SAN storage on different disk arrays)
+-             Anti-Virus Software installed and configured to update from root server.
+-             System Added to SCOM for monitoring.
+		
+Pre-Installation of SQL Server
+-             Separate RAID Arrays for Data and Log files.  Tempdb on dedicated array.
+-             Data, Log, and Tempdb drives formatted with 64K Allocation Unit Size.
+-             SQL Server Admins Group added to the Local Administrators Group.
+-             Create AD Service User Account, or Local User Account for non-domain servers, with no permissions.
+	-             Add the readServicePrincipalName and writeServicePrincipalName permissions to the Service Account in AD (http://support.microsoft.com/kb/319723)
+-             Configure the Data drive with Drive letter E in Windows.
+-             Configure the Log drive with Drive letter L in Windows.
+-             Configure the TempDB drive with Drive letter T in Windows.
+-             Configure additional Data drives with Drive letter F, G, etc. skipping previously reserved Drive letters and M (cluster MSDTC) and Q (cluster Quorum).
+-             Add the AD Service User Account to the Root path with Full Control of D, and List Folder Contents Permissions for Data, Log and Tempdb Drives.
+-             Create SQLData folder on Data and Tempdb Drives
+-             Add the AD Service User Account with Full Control of SQLData folder on Data and Tempdb Drives
+-             Create SQLLogs folder on Log Drive
+-             Add the AD Service User Account with Full Control of SQLLogs folder on Log Drive
+- 
+SQL Server Installation
+-             Use the previously configured Service Account as the startup account for the SQL Service.
+-             Install the binaries to the D Drive.
+-             If installing SQL Server 2008 set the default file paths according to the previous drive configuration.
+-             Set SQL Server, and SQL Agent to startup Automatically.  Disable the Browser Service unless installing Named Instances or multiple instances on the Server.
+-             Apply latest Service Pack and Cumulative Update based on SQL Server version.
+-             Provision SQL Admins group in the sysadmin fixed server role.
+- 
+Post-Installation Steps
+-             Add the SQLServerMSSQLUser$<ServerName>$<InstanceName> group to the Root path with Full Control of D, and List Folder Contents Permissions for Data, Log and Tempdb Drives.
+-             Add the SQLServerMSSQLUser$<ServerName>$<InstanceName> group with Full Control of SQLData folder on Data and Tempdb Drives.
+-             Add the SQLServerMSSQLUser$<ServerName>$<InstanceName> group with Full Control of SQLLogs folder on Log Drive.
+-             Remove the AD Service User Account from the Root Path. (This decouples the Service Account explicitly and relys on the group)
+-             Add the SQLServerMSSQLUser$<ServerName>$<InstanceName>, SQLServerSQLAgentUser$<ServerName>$<InstanceName>, or other group accounts to any Backup, or processing folders as needed.
+-             In the Local Security Policy, add the SQLServerMSSQLUser$<ServerName>$<InstanceName> group to the Perform Volume Maintenance Tasks and Lock Pages in Memory objects.
+-             Exclude Data, Log, Tempdb, any Backup file paths, and the SQL Server Binaries folders from AntiVirus Scans.
+-             Remove Builtin\Admins from sysadmin fixed server role.
+-             Enable Failed Login Auditing in the SQL Server Security Settings
+-             Enable TCP/IP and change default port from 1433.
+-             Enable remote DAC connections.
+-             Enable as required xp_cmdshell, SQLCLR, and OLE Automation for the SQL Server Instance.
+	-             Configure xp_cmdshell proxy account as required.
+-             Enable DatabaseMail and configure default public and private accounts.
+-             Configure SQL Error Log retention for 30 log files
+-             Configure SQL Agent job to perform nightly log rollover.
+-             Configure SQL Agent jobs for database backups, CHECKDB, index maintenance, statistics updates, backup cleanup, and history cleanup.
+-             Move MSDB Database files to SQLData and SQLLogs respectively.
+-             Reconfigure Tempdb with data files equal to 1/2-1/4 the physical CPU’s on the server based on load characteristics.  Set data files to the same size based on load characteristics in 4096MB increments for Datafiles, and 1024MB increments for Log files.  Set AutoGrowth to 1024MB for data files and 512MB for Log file.
+-             Enable Trace Flag 1118 on SQL Server 2000 and SQL Server 2005 for Tempdb.
+-             Set Model database to SIMPLE recovery, 2048MB default datafile size and 1024MB default logfile size.  Set AutoGrowth to 1024MB for data files and 512MB for Log file.
+-             Set Max Server Memory based on installed RAM and installation type (Newer Servers are all 64bit, but enable AWE as needed on 32 bit servers).
+	-             8GB RAM = 6144 Max Server Memory
+	-             16GB RAM = 12228 Max Server Memory
+	-             32GB RAM = 28672 Max Server Memory
+	-             These are base values that will later be adjusted based on the Memory\Available MBytes counter being > 150 on the Server.
+-             Set max degree of parallelism sp_configure option based on the number of physical CPU cores installed and anticipated workload
+	-             For OLTP, generally set to 1/2 or 1/4 of the physical cores available on the server.
+	-             Adjusted up or down based on wait stats and load.
+-             Set cost threshold of parallelism sp_configure option based on the anticipated load.
+	-             General default value of 5 is low for most OLTP workloads and should be increased.
+	-             Base value of 20-25 used for most server installs.
+-             Add AD login (standard for environment and locked out in AD by default) for patching and emergency server access to Local Administrators Group.
+-             Set SA user password to standardized password that is changed quarterly on all servers and maintained in password safe.
+-             Have Server Team remove SQL Admins from Local Administrators Group. ( Not yet implemented in my environment but coming very soon! )
