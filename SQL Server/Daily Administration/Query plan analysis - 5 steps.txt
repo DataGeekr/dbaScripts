@@ -1,0 +1,25 @@
+- Procurar por linhas grossas e segui-las até encontrar:
+     - Lookup
+          Missing columns in index
+
+     - Spool 
+          (used as a "cache" in the query processor)
+          Lack of adequate indexes or uniqueness information (can be overridden by DISTINCT or Unique Keys)
+          Hidden tables in tempDB, not a good sign
+          Distinct values on query (FROM (SELECT DISTINCT)) removes the spool or OPTION QUERYTRACEON 8690
+
+     - Sort
+          Check expectations and indexes
+
+     - Hash
+          Heavily impact on tempDB
+          Failed to create an index somewhere     
+
+     - Nested Loops (serial)
+          Works best with small outer (top) input
+
+     -* Scan
+                 Often appropriate
+          Trace Flag OPTION(QUERYTRACEON 9130) - Disables residual predicates 
+                                                 and forces the query optimizer to process as filter
+                                                 High IO but thin lines only showing up

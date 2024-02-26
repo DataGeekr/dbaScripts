@@ -1,0 +1,53 @@
+There are different types of pages in SQL Server. No matter what types of pages are, the layout of the page is the same. A data file consists of numbers of 8k-pages. A Page includes 8192 bytes. First 96 bytes are used for header. The rest of the space is for data. A variable length row offset array (or slot array) is located at the end of every page and grows backwards. Count of records (size of array) is saved in the header. The size of each element in the offset array is 2 bytes. Records in a page are not sorted even though it is an index page. If the data needs to be sorted, the offset array will be is sorted by the key of the index.
+As far as I know, there are about 14 types of pages in SQL Server data file.
+- Type 1 – Data page.
+		o    Data records in heap
+		o    Clustered index leaf-level
+		o    Location can be random
+- Type 2 – Index page
+		o    Non-clustered index
+		o    Non-leave-level clustered index
+		o    Location can be random
+- Type 3 – Text Mixed Page
+		o    Small LOB value(s), multiple types and rows.
+		o    Location can be random
+- Type 4 – Text Page
+		o    LOB value from a single column value
+		o    Location can be random
+- Type 7 – Sort Page
+		o    Temporary page for sort operation.
+		o    Usually tempdb, but can be in user database for online operations.
+		o    Location can be random
+- Type 8 – GAM Page
+		o    Global Allocation Map, track allocation of extents.
+		o    One bit for each extent, if the bit is 1, means the extent is free, otherwise means the extent is allocated (not necessary full).
+		o    The first GAM page in each file is page 2
+- Type 9 – SGAM Page
+		o    Shared Global Allocation Map, track allocation of shared extents
+		o    One bit for each extent, if the bit is 1, means the extent is allocated but has free space, otherwise means the extent is full
+		o    The first SGAM page in each file is page 3
+- Type 10 – IAM Page
+		o    Index Allocation Map. Extent allocation in a GAM interval for an index or heap table.
+		o    Location can be random.
+- Type 11 – PFS Page
+		o    Page Free Space. Byte map, keeps track of free space of pages
+		o    The first PFS is page 1 in each file.
+- Type 13 – Boot Page
+		o    Information about the page
+		o    Only page 9 in file 1.
+- Type 14 – Server Configuration Page (It may not be the official name)
+		o    Part of information returned from sp_configure.
+		o    It only exists in master database, file 1, page 10
+		o    SQL Server 2008 Only
+- Type 15 – File Header Page
+		o    Information about the file.
+		o    It’s always page 0 every data page.
+- Type 16 – Differential Changed map
+		o    Extents in GAM interval have changed since last full or differential backup
+		o    The first Differential Changed Page is page 6 in each file
+- Type 17 – Bulk Change Map
+		o    Extents in GAM interval modified by bulk operations since last backup
+		o    The first Bulk Change Map page is page 7 in each file.
+ 
+
+
