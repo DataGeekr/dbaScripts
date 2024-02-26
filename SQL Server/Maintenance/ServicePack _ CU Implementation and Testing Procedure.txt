@@ -1,0 +1,21 @@
+1. Install the CU on a test virtual machine 
+	1. Does the CU install without any issues or errors?
+	2. Does the CU installation require a system reboot?
+	3. Do all of the relevant SQL Server services restart after the installation?
+	4. Does SQL Server appear to work correctly after the installation?
+
+2. Install the CU on several development systems 
+	1. Does the CU install without any issues or errors?
+	2. Does SQL Server appear work correctly during normal daily usage?
+	3. Do your applications appear to work correctly during unit testing?
+
+3. Install the CU in a shared QA or integration environment 
+	1. Did you follow a specific implementation plan and checklist for the installation?
+	2. Do all of the applications that use SQL Server pass smoke testing?
+	3. Do all of the applications pass any automated testing that you have available?
+	4. Do all of the applications pass more detailed manual functional testing?
+
+4. Install the CU in your Production environment 
+	1. Use a rolling upgrade strategy where possible
+	2. Use a detailed, step-by-step checklist during the deployment
+	3. Update your checklist with missed items and lessons learned
