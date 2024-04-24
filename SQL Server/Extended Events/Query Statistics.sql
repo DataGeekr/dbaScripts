@@ -1,7 +1,36 @@
 USE [master];
 GO
 
-/* Exclusão da sessão caso exista */
+/*
+Create a master key to protect the secret of the credential
+IF NOT EXISTS (
+              SELECT 1
+              FROM sys.symmetric_keys
+              WHERE name = '##MS_DatabaseMasterKey##'
+              )
+CREATE MASTER KEY;
+*/
+    
+/*
+(Re-)create a database scoped credential.
+The name of the credential must match the URL of the blob container.
+*/
+IF EXISTS (
+          SELECT 1
+          FROM sys.database_credentials
+          WHERE name = 'https://exampleaccount4xe.blob.core.windows.net/xe-example-container'
+          )
+    DROP DATABASE SCOPED CREDENTIAL [https://exampleaccount4xe.blob.core.windows.net/xe-example-container];
+
+/*
+The secret is the SAS token for the container. The Read, Write, and List permissions are set.
+*/
+CREATE DATABASE SCOPED CREDENTIAL [https://exampleaccount4xe.blob.core.windows.net/xe-example-container]
+WITH IDENTITY = 'SHARED ACCESS SIGNATURE',
+     SECRET = 'sp=rwl&st=2023-10-17T23:28:32Z&se=2023-10-18T07:28:32Z&spr=https&sv=2022-11-02&sr=c&sig=REDACTED';    
+    
+
+/* ExclusÃ£o da sessÃ£o caso exista */
 IF (SELECT COUNT(*)
     FROM [sys].[dm_xe_sessions] AS [xes]
     WHERE [xes].[name] = N'QueryBaseline') = 1
@@ -15,7 +44,7 @@ BEGIN
 END;
 GO
 
-/* Criação da sessão */
+/* CriaÃ§Ã£o da sessÃ£o */
 CREATE EVENT SESSION [QueryBaseline] ON SERVER
 ADD EVENT sqlserver.error_reported (
     ACTION ( sqlserver.client_app_name , sqlserver. database_id,
@@ -83,7 +112,7 @@ WITH ( MAX_MEMORY = 4096 KB ,
         STARTUP_STATE = OFF )
 GO
 
-/* Inicialização / paralização da sessão */
+/* InicializaÃ§Ã£o / paralizaÃ§Ã£o da sessÃ£o */
 
 ALTER EVENT SESSION [QueryBaseline]
 ON SERVER
@@ -134,7 +163,7 @@ GO
     
   
 
-/* Finalização da sessão */
+/* FinalizaÃ§Ã£o da sessÃ£o */
 IF (SELECT COUNT(*)
     FROM [sys].[dm_xe_sessions] AS [xes]
     WHERE [xes].[name] = N'QueryBaseline') = 1
@@ -150,17 +179,17 @@ END;
 GO
 
 /*
-– Turn off most significant bit by  AND’ing with 0x7fffffffffffffff
-– 0x7fffffffffffffff represents the MSB turned off in max value for UNIT 64
+â€“ Turn off most significant bit by  ANDâ€™ing with 0x7fffffffffffffff
+â€“ 0x7fffffffffffffff represents the MSB turned off in max value for UNIT 64
 declare @xeHash decimal(20,0)
-– Replace the value with the value of the XE query_plan_hash
+â€“ Replace the value with the value of the XE query_plan_hash
 set @xehash = cast(16026647133934493185 as decimal(20,0))
 declare @a as bigint
 declare @NoMSBBitset varbinary
 select @a = 0x7fffffffffffffff
 select @NoMSBBitset= cast((0xF21482B006395C19 & @a) as bigint)
-– Compare hash after turning off MSB on both places
-– The line 9223372036854775808 = 0x80000000`00000000 which subtracts MSB.
+â€“ Compare hash after turning off MSB on both places
+â€“ The line 9223372036854775808 = 0x80000000`00000000 which subtracts MSB.
 select b.text,c.query_plan,a.* from sys.dm_exec_query_stats a
 cross apply sys.dm_exec_sql_text(a.sql_handle) b
 cross apply sys.dm_exec_query_plan(a.plan_handle) c
