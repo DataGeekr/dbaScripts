@@ -38,7 +38,7 @@ CREATE CERTIFICATE BackupCertificateTETIS
    ) 
 
 
-   -- Se der erro, provavelmente ser· por causa das permissıes NTFS do certificado 
+   -- Se der erro, provavelmente ser√° por causa das permiss√µes NTFS do certificado 
    Command Prompt (Administrator): icacls Z:\SQLServer\CertificatesSQL\ /grant MSSQLSERVER:(GR) /T
 ```
 
